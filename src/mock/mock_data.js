@@ -14,11 +14,11 @@ export const mockData = {
           "icon": "https://linux.do/uploads/default/optimized/3X/7/d/7de31932a4fd533496cfe35979a4d9d995bb5c63_2_180x180.png"
         },
         {
-          "id": "github",
-          "name": "GitHub",
-          "url": "https://github.com",
-          "description": "代码托管平台",
-          "icon": "https://github.com/favicon.ico"
+          "id": "site-1752647763198",
+          "name": "NodeSeek",
+          "url": "https://www.nodeseek.com/",
+          "description": "",
+          "icon": "https://external-content.duckduckgo.com/ip3/www.nodeseek.com.ico"
         },
         {
           "id": "site-1752634126595",
@@ -26,6 +26,13 @@ export const mockData = {
           "url": "https://app.follow.is",
           "description": "",
           "icon": "https://app.follow.is/favicon.ico"
+        },
+        {
+          "id": "github",
+          "name": "GitHub",
+          "url": "https://github.com",
+          "description": "代码托管平台",
+          "icon": "https://github.com/favicon.ico"
         },
         {
           "id": "site-1752635662818",
@@ -40,13 +47,6 @@ export const mockData = {
           "url": "https://www.cloudflare.com",
           "description": "",
           "icon": "https://external-content.duckduckgo.com/ip3/www.cloudflare.com.ico"
-        },
-        {
-          "id": "site-1752647763198",
-          "name": "NodeSeek",
-          "url": "https://www.nodeseek.com/",
-          "description": "",
-          "icon": "https://external-content.duckduckgo.com/ip3/www.nodeseek.com.ico"
         }
       ]
     },
