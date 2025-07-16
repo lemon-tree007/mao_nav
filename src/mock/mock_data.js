@@ -482,6 +482,20 @@ export const mockData = {
           "url": "https://www.coursera.org",
           "description": "在线课程平台",
           "icon": "https://www.coursera.org/favicon.ico"
+        },
+        {
+          "id": "site-1752635322544",
+          "name": "Z-Library",
+          "url": "https://zh.zlib2.ru/",
+          "description": "",
+          "icon": "https://zh.zlib2.ru/favicon.ico"
+        },
+        {
+          "id": "site-1752635348068",
+          "name": "安娜的档案",
+          "url": "https://zh.annas-archive.org",
+          "description": "",
+          "icon": "https://zh.annas-archive.org/favicon.ico"
         }
       ]
     },
@@ -518,6 +532,20 @@ export const mockData = {
           "url": "https://tinypng.com",
           "description": "图片压缩工具",
           "icon": "https://external-content.duckduckgo.com/ip3/tinypng.com.ico"
+        },
+        {
+          "id": "site-1752635216611",
+          "name": "ITDOG",
+          "url": "https://www.itdog.cn",
+          "description": "",
+          "icon": "https://www.itdog.cn/favicon.ico"
+        },
+        {
+          "id": "site-1752635241376",
+          "name": "Online Free IP Address Lookup Tool - IP.IM",
+          "url": "https://ip.im",
+          "description": "",
+          "icon": "https://external-content.duckduckgo.com/ip3/ip.im.ico"
         }
       ]
     },
