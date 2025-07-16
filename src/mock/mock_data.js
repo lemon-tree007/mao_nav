@@ -40,6 +40,13 @@ export const mockData = {
           "url": "https://www.cloudflare.com",
           "description": "",
           "icon": "https://external-content.duckduckgo.com/ip3/www.cloudflare.com.ico"
+        },
+        {
+          "id": "site-1752647763198",
+          "name": "NodeSeek",
+          "url": "https://www.nodeseek.com/",
+          "description": "",
+          "icon": "https://external-content.duckduckgo.com/ip3/www.nodeseek.com.ico"
         }
       ]
     },
@@ -325,13 +332,6 @@ export const mockData = {
           "url": "https://linux.do",
           "description": "Linux与开源技术社区",
           "icon": "https://linux.do/uploads/default/optimized/3X/7/d/7de31932a4fd533496cfe35979a4d9d995bb5c63_2_180x180.png"
-        },
-        {
-          "id": "nodeseek",
-          "name": "NodeSeek",
-          "url": "https://www.nodeseek.com",
-          "description": "极客技术社区",
-          "icon": "https://www.nodeseek.com/static/image/favicon/favicon-32x32.png"
         },
         {
           "id": "v2ex",
