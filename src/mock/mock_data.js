@@ -346,6 +346,55 @@ export const mockData = {
           "url": "https://www.52pojie.cn/",
           "description": "软件安全与破解技术论坛",
           "icon": "https://www.52pojie.cn/favicon.ico"
+        },
+        {
+          "id": "site-1752635879378",
+          "name": "什么值得买",
+          "url": "https://www.smzdm.com",
+          "description": "",
+          "icon": "https://www.smzdm.com/favicon.ico"
+        },
+        {
+          "id": "site-1752635900938",
+          "name": "MarginNote 中文社区",
+          "url": "https://bbs.marginnote.cn",
+          "description": "",
+          "icon": "https://external-content.duckduckgo.com/ip3/bbs.marginnote.cn.ico"
+        },
+        {
+          "id": "site-1752635914973",
+          "name": "飞客 - 享此刻，享未来",
+          "url": "https://www.flyert.com/portal.php",
+          "description": "",
+          "icon": "https://www.flyert.com/favicon.ico"
+        },
+        {
+          "id": "site-1752635925714",
+          "name": "数码之家",
+          "url": "https://www.mydigit.cn/forum.php",
+          "description": "",
+          "icon": "https://www.mydigit.cn/favicon.ico"
+        },
+        {
+          "id": "site-1752635940903",
+          "name": "爱好论坛",
+          "url": "https://www.aihao.cc/forum.php",
+          "description": "",
+          "icon": "https://www.aihao.cc/favicon.ico"
+        },
+        {
+          "id": "site-1752635954647",
+          "name": "恩山无线论坛",
+          "url": "https://www.right.com.cn",
+          "description": "",
+          "icon": "https://www.right.com.cn/favicon.ico"
+        },
+        {
+          "id": "site-1752635965814",
+          "name": "openos",
+          "url": "https://www.openos.org",
+          "description": "",
+          "icon": "https://www.openos.org/favicon.ico"
         }
       ]
     },
@@ -553,6 +602,20 @@ export const mockData = {
           "url": "https://curlconverter.com/",
           "description": "",
           "icon": "https://curlconverter.com/favicon.ico"
+        },
+        {
+          "id": "site-1752636004271",
+          "name": "CrxDL ",
+          "url": "https://crxdl.com",
+          "description": "Chrome浏览器扩展插件CRX下载网",
+          "icon": "https://crxdl.com/favicon.ico"
+        },
+        {
+          "id": "site-1752636038791",
+          "name": "温度地图 | Zoom Earth",
+          "url": "https://zoom.earth",
+          "description": "",
+          "icon": "https://zoom.earth/favicon.ico"
         }
       ]
     },
