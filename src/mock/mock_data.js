@@ -26,6 +26,13 @@ export const mockData = {
           "url": "https://github.com",
           "description": "代码托管平台",
           "icon": "https://github.com/favicon.ico"
+        },
+        {
+          "id": "site-1752634126595",
+          "name": "Folo",
+          "url": "https://app.follow.is",
+          "description": "",
+          "icon": "https://app.follow.is/favicon.ico"
         }
       ]
     },
@@ -189,6 +196,13 @@ export const mockData = {
           "url": "https://cursor.sh",
           "description": "AI代码编辑器",
           "icon": "https://cursor.sh/favicon.ico"
+        },
+        {
+          "id": "site-1752634109775",
+          "name": "豆包",
+          "url": "https://www.doubao.com/",
+          "description": "",
+          "icon": "https://external-content.duckduckgo.com/ip3/www.doubao.com.ico"
         }
       ]
     },
