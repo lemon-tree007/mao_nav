@@ -33,6 +33,13 @@ export const mockData = {
           "url": "https://mail.proton.me",
           "description": "",
           "icon": "https://external-content.duckduckgo.com/ip3/mail.proton.me.ico"
+        },
+        {
+          "id": "site-1752635828380",
+          "name": "CloudFlare",
+          "url": "https://www.cloudflare.com",
+          "description": "",
+          "icon": "https://external-content.duckduckgo.com/ip3/www.cloudflare.com.ico"
         }
       ]
     },
@@ -205,13 +212,6 @@ export const mockData = {
       "icon": "☁️",
       "order": 3,
       "sites": [
-        {
-          "id": "cloudflare",
-          "name": "Cloudflare",
-          "url": "https://www.cloudflare.com",
-          "description": "全球CDN和网络安全服务",
-          "icon": "https://external-content.duckduckgo.com/ip3/www.cloudflare.com.ico"
-        },
         {
           "id": "vercel",
           "name": "Vercel",
