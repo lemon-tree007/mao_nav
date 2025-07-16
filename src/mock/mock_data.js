@@ -24,7 +24,7 @@ export const mockData = {
           "id": "site-1752634126595",
           "name": "Folo",
           "url": "https://app.follow.is",
-          "description": "",
+          "description": "RSS聚合网站",
           "icon": "https://app.follow.is/favicon.ico"
         },
         {
