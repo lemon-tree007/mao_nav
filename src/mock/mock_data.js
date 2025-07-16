@@ -167,14 +167,14 @@ export const mockData = {
           "name": "ChatGPT",
           "url": "https://chat.openai.com",
           "description": "OpenAI对话AI助手",
-          "icon": "https://chat.openai.com/favicon.ico"
+          "icon": "https://external-content.duckduckgo.com/ip3/chat.openai.com.ico"
         },
         {
           "id": "claude",
           "name": "Claude",
           "url": "https://claude.ai",
           "description": "Anthropic AI助手",
-          "icon": "https://claude.ai/favicon.ico"
+          "icon": "https://external-content.duckduckgo.com/ip3/claude.ai.ico"
         },
         {
           "id": "midjourney",
@@ -217,7 +217,7 @@ export const mockData = {
           "name": "Cloudflare",
           "url": "https://www.cloudflare.com",
           "description": "全球CDN和网络安全服务",
-          "icon": "https://www.cloudflare.com/favicon.ico"
+          "icon": "https://external-content.duckduckgo.com/ip3/www.cloudflare.com.ico"
         },
         {
           "id": "vercel",
@@ -396,7 +396,7 @@ export const mockData = {
           "name": "币安",
           "url": "https://www.binance.com",
           "description": "加密货币交易平台",
-          "icon": "https://bin.bnbstatic.com/static/images/bnb-for/brand.png"
+          "icon": "https://external-content.duckduckgo.com/ip3/www.binance.com.ico"
         },
         {
           "id": "okx",
