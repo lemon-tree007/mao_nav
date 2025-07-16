@@ -176,6 +176,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  initialSelectedCategoryId: {
+    type: String,
+    default: ''
+  },
   loading: {
     type: Boolean,
     default: false
@@ -210,6 +214,14 @@ const formData = ref({
 watch(() => props.categories, (newCategories) => {
   localCategories.value = JSON.parse(JSON.stringify(newCategories))
 }, { immediate: true, deep: true })
+
+// 监听选中分类变化
+watch(() => props.initialSelectedCategoryId, (newCategoryId) => {
+  if (newCategoryId) {
+    selectedCategoryId.value = newCategoryId
+    currentPage.value = 1 // 重置到第一页
+  }
+}, { immediate: true })
 
 // 手动同步到父组件的函数，避免无限循环
 const syncToParent = () => {
@@ -429,94 +441,7 @@ const autoDetectIcon = async () => {
 
   try {
     const url = new URL(formData.value.url)
-    const baseUrl = `${url.protocol}//${url.host}`
-
-    // 首先尝试默认的 favicon.ico
-    const faviconUrl = `${baseUrl}/favicon.ico`
-
-    try {
-      // 尝试默认 favicon
-      const iconUrl = await testImage(faviconUrl)
-      formData.value.icon = iconUrl
-      iconError.value = false
-      return
-    } catch (error) {
-      // 默认 favicon 失败，尝试从 HTML 中提取
-      console.log('默认 favicon 不可用，尝试从 HTML 中提取...', error.message)
-    }
-
-    // 从 HTML 中提取图标信息
-    try {
-      // 注意：这里可能遇到 CORS 问题，在生产环境中可能需要通过代理服务器获取
-      const response = await fetch(formData.value.url, {
-        mode: 'cors',
-        headers: {
-          'Accept': 'text/html,application/xhtml+xml'
-        }
-      })
-
-      if (!response.ok) {
-        throw new Error('无法获取网页内容')
-      }
-
-      const html = await response.text()
-      const parser = new DOMParser()
-      const doc = parser.parseFromString(html, 'text/html')
-
-      // 查找各种可能的图标 link 标签
-      const iconSelectors = [
-        'link[rel="icon"]',
-        'link[rel="shortcut icon"]',
-        'link[rel="apple-touch-icon"]',
-        'link[rel="apple-touch-icon-precomposed"]',
-        'link[rel="mask-icon"]'
-      ]
-
-      let foundIcon = null
-
-      for (const selector of iconSelectors) {
-        const linkElement = doc.querySelector(selector)
-        if (linkElement) {
-          let href = linkElement.getAttribute('href')
-          if (href) {
-            // 处理相对路径
-            if (href.startsWith('//')) {
-              href = url.protocol + href
-            } else if (href.startsWith('/')) {
-              href = baseUrl + href
-            } else if (!href.startsWith('http')) {
-              href = baseUrl + '/' + href
-            }
-
-            foundIcon = href
-            break
-          }
-        }
-      }
-
-      if (foundIcon) {
-        // 测试提取到的图标是否可用
-        try {
-          await testImage(foundIcon)
-          formData.value.icon = foundIcon
-          iconError.value = false
-          console.log('成功从 HTML 中提取图标:', foundIcon)
-          return
-        } catch (error) {
-          console.log('提取的图标不可用:', foundIcon, error.message)
-        }
-      }
-
-      // 如果都失败了，尝试多个备用图标服务
-      await tryFallbackServices(url.host)
-
-    } catch (fetchError) {
-      console.log('获取 HTML 失败，可能是 CORS 限制:', fetchError.message)
-
-      // 如果因为 CORS 无法获取 HTML，尝试多个备用图标服务
-      await tryFallbackServices(url.host)
-    }
-
+    await tryFallbackServices(url.host)
   } catch (error) {
     alert('URL格式不正确')
     console.error('URL 解析错误:', error)
@@ -537,16 +462,24 @@ const saveSite = () => {
 
   if (editingSite.value) {
     // 更新现有站点
-    const siteIndex = category.sites.findIndex(s => s.id === editingSite.value.id)
-    if (siteIndex !== -1) {
-      category.sites[siteIndex] = {
-        id: editingSite.value.id,
-        name: formData.value.name,
-        url: formData.value.url,
-        description: formData.value.description,
-        icon: formData.value.icon
-      }
+    // 首先从原分类中移除站点
+    const originalCategory = localCategories.value.find(cat =>
+      cat.sites && cat.sites.some(s => s.id === editingSite.value.id)
+    )
+
+    if (originalCategory && originalCategory.sites) {
+      originalCategory.sites = originalCategory.sites.filter(s => s.id !== editingSite.value.id)
     }
+
+    // 然后在新分类中添加更新后的站点
+    const updatedSite = {
+      id: editingSite.value.id,
+      name: formData.value.name,
+      url: formData.value.url,
+      description: formData.value.description,
+      icon: formData.value.icon
+    }
+    category.sites.push(updatedSite)
   } else {
     // 添加新站点
     const newSite = {
