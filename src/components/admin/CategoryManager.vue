@@ -17,30 +17,31 @@
       <div
         v-for="(category, index) in localCategories"
         :key="category.id"
-        class="category-item"
+        class="category-item clickable"
+        @click="$emit('viewSites', category.id)"
       >
         <div class="category-header">
           <div class="category-info">
-            <span class="category-icon" @click="editCategory(category)">
+            <span class="category-icon" @click.stop="editCategory(category)">
               {{ category.icon }}
             </span>
             <div class="category-details">
-              <h3 @click="editCategory(category)">{{ category.name }}</h3>
-              <p>{{ category.sites?.length || 0 }} 个站点</p>
+              <h3 @click.stop="editCategory(category)">{{ category.name }}</h3>
+              <p>{{ category.sites?.length || 0 }} 个站点 → 点击查看站点管理</p>
             </div>
           </div>
           <div class="category-actions">
             <span class="order-badge">排序: {{ category.order }}</span>
-            <button @click="moveCategory(index, -1)" :disabled="index === 0" class="move-btn">
+            <button @click.stop="moveCategory(index, -1)" :disabled="index === 0" class="move-btn">
               ⬆️
             </button>
-            <button @click="moveCategory(index, 1)" :disabled="index === localCategories.length - 1" class="move-btn">
+            <button @click.stop="moveCategory(index, 1)" :disabled="index === localCategories.length - 1" class="move-btn">
               ⬇️
             </button>
-            <button @click="editCategory(category)" class="edit-btn">
+            <button @click.stop="editCategory(category)" class="edit-btn">
               ✏️ 编辑
             </button>
-            <button @click="deleteCategory(category.id)" class="delete-btn">
+            <button @click.stop="deleteCategory(category.id)" class="delete-btn">
               🗑️ 删除
             </button>
           </div>
@@ -142,7 +143,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update', 'save'])
+const emit = defineEmits(['update', 'save', 'viewSites'])
 
 // 本地分类数据
 const localCategories = ref([])
@@ -320,11 +321,17 @@ const handleImageError = (event) => {
   border-radius: 8px;
   padding: 20px;
   border: 1px solid #e9ecef;
-  transition: box-shadow 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-.category-item:hover {
+.category-item.clickable {
+  cursor: pointer;
+}
+
+.category-item.clickable:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #f1f3f4;
+  border-color: #3498db;
 }
 
 .category-header {
