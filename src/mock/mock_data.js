@@ -38,7 +38,7 @@ export const mockData = {
           "id": "site-1752635662818",
           "name": "Proton",
           "url": "https://mail.proton.me",
-          "description": "隐私邮箱",
+          "description": "隐私邮箱服务",
           "icon": "https://external-content.duckduckgo.com/ip3/mail.proton.me.ico"
         },
         {
