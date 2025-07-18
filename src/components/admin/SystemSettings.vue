@@ -35,6 +35,80 @@
       </div>
     </div>
 
+    <!-- 网站设置 -->
+    <div class="settings-section">
+      <h3>🌐 网站设置</h3>
+      <div class="website-settings">
+        <!-- 网站标题设置 -->
+        <div class="setting-group">
+          <label>网站标题:</label>
+          <div class="title-input-group">
+            <input
+              v-model="websiteTitle"
+              type="text"
+              placeholder="请输入网站标题"
+              class="title-input"
+              maxlength="50"
+            >
+            <button
+              @click="saveTitleToGitHub"
+              :disabled="titleSaving || !websiteTitle.trim()"
+              class="save-title-btn"
+            >
+              {{ titleSaving ? '保存中...' : '💾 保存标题' }}
+            </button>
+          </div>
+          <p class="setting-description">当前标题: {{ currentTitle || '未设置' }}</p>
+        </div>
+
+        <!-- Logo设置 -->
+        <div class="setting-group">
+          <label>网站Logo:</label>
+          <div class="logo-upload-area">
+            <div class="logo-preview">
+              <img
+                v-if="logoPreview"
+                :src="logoPreview"
+                alt="Logo预览"
+                class="logo-preview-img"
+              >
+              <img
+                v-else-if="currentLogo"
+                :src="currentLogo"
+                alt="当前Logo"
+                class="logo-preview-img"
+              >
+              <div v-else class="logo-placeholder">
+                <span>🖼️</span>
+                <p>暂无Logo</p>
+              </div>
+            </div>
+            <div class="logo-upload-controls">
+              <input
+                ref="logoFileInput"
+                type="file"
+                accept="image/png"
+                @change="handleLogoSelect"
+                style="display: none"
+              >
+              <button @click="selectLogo" class="select-logo-btn">
+                📁 选择PNG文件
+              </button>
+              <button
+                @click="saveLogoToGitHub"
+                :disabled="logoSaving || !selectedLogoFile"
+                class="save-logo-btn"
+                v-if="selectedLogoFile"
+              >
+                {{ logoSaving ? '上传中...' : '🚀 上传Logo' }}
+              </button>
+            </div>
+          </div>
+          <p class="setting-description">仅支持PNG格式，建议尺寸: 128x128px</p>
+        </div>
+      </div>
+    </div>
+
     <!-- 环境变量配置 -->
     <div class="settings-section">
       <h3>🌍 环境变量配置</h3>
@@ -164,14 +238,26 @@ VITE_GITHUB_BRANCH=your_github_branch_here</code></pre>
         </div>
       </div>
     </div>
+
+    <!-- 自定义弹框 -->
+    <CustomDialog
+      :visible="dialogVisible"
+      :type="dialogType"
+      :title="dialogTitle"
+      :message="dialogMessage"
+      :details="dialogDetails"
+      @close="closeDialog"
+      @confirm="closeDialog"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useGitHubAPI } from '../../apis/useGitHubAPI.js'
+import CustomDialog from './CustomDialog.vue'
 
-const { verifyGitHubConnection } = useGitHubAPI()
+const { verifyGitHubConnection, loadCategoriesFromGitHub, saveCategoriesToGitHub, uploadBinaryFile } = useGitHubAPI()
 
 // 连接状态
 const connectionStatus = ref(null)
@@ -192,6 +278,39 @@ const systemInfo = ref({
   buildTime: '',
   userAgent: ''
 })
+
+// 网站设置
+const websiteTitle = ref('')
+const currentTitle = ref('')
+const titleSaving = ref(false)
+
+// Logo设置
+const logoFileInput = ref(null)
+const selectedLogoFile = ref(null)
+const logoPreview = ref('')
+const currentLogo = ref('/logo.png')
+const logoSaving = ref(false)
+
+// 自定义弹框状态
+const dialogVisible = ref(false)
+const dialogType = ref('success')
+const dialogTitle = ref('')
+const dialogMessage = ref('')
+const dialogDetails = ref([])
+
+// 显示弹框
+const showDialog = (type, title, message, details = []) => {
+  dialogType.value = type
+  dialogTitle.value = title
+  dialogMessage.value = message
+  dialogDetails.value = details
+  dialogVisible.value = true
+}
+
+// 关闭弹框
+const closeDialog = () => {
+  dialogVisible.value = false
+}
 
 // 测试GitHub连接
 const testConnection = async () => {
@@ -228,11 +347,168 @@ const getSystemInfo = () => {
   }
 }
 
+// 加载当前网站设置
+const loadWebsiteSettings = async () => {
+  try {
+    const data = await loadCategoriesFromGitHub()
+    currentTitle.value = data.title || '猫猫导航'
+    websiteTitle.value = currentTitle.value
+  } catch (error) {
+    console.error('加载网站设置失败:', error)
+    currentTitle.value = '猫猫导航'
+    websiteTitle.value = '猫猫导航'
+  }
+}
+
+// 保存标题到GitHub
+const saveTitleToGitHub = async () => {
+  if (!websiteTitle.value.trim()) {
+    showDialog(
+      'error',
+      '❌ 输入错误',
+      '请输入网站标题',
+      []
+    )
+    return
+  }
+
+  titleSaving.value = true
+  try {
+    // 加载当前数据
+    const data = await loadCategoriesFromGitHub()
+
+    // 更新标题
+    data.title = websiteTitle.value.trim()
+
+    // 保存到GitHub
+    await saveCategoriesToGitHub(data)
+
+    currentTitle.value = websiteTitle.value.trim()
+    showDialog(
+      'success',
+      '🎉 网站标题保存成功',
+      '您的网站标题已成功保存到GitHub仓库！',
+      [
+        '• 更改将在 2-3 分钟内自动部署到线上',
+        '• 部署完成后，您可以在前台页面看到最新标题',
+        '• 如有问题，请检查Vercel或CFpage是否触发自动部署'
+      ]
+    )
+  } catch (error) {
+    console.error('保存标题失败:', error)
+    showDialog(
+      'error',
+      '❌ 保存失败',
+      '网站标题保存过程中发生错误，请重试',
+      [`• 错误详情: ${error.message}`]
+    )
+  } finally {
+    titleSaving.value = false
+  }
+}
+
+// 选择Logo文件
+const selectLogo = () => {
+  logoFileInput.value?.click()
+}
+
+// 处理Logo文件选择
+const handleLogoSelect = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // 验证文件类型
+  if (file.type !== 'image/png') {
+    showDialog(
+      'error',
+      '❌ 文件格式错误',
+      '请选择PNG格式的图片文件',
+      []
+    )
+    return
+  }
+
+  // 验证文件大小 (限制为2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    showDialog(
+      'error',
+      '❌ 文件过大',
+      '图片文件大小不能超过2MB',
+      [`• 当前文件大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`]
+    )
+    return
+  }
+
+  selectedLogoFile.value = file
+
+  // 创建预览
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    logoPreview.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+// 保存Logo到GitHub
+const saveLogoToGitHub = async () => {
+  if (!selectedLogoFile.value) {
+    showDialog(
+      'error',
+      '❌ 未选择文件',
+      '请先选择Logo文件',
+      []
+    )
+    return
+  }
+
+  logoSaving.value = true
+  try {
+    // 读取文件为ArrayBuffer
+    const arrayBuffer = await selectedLogoFile.value.arrayBuffer()
+
+    // 上传到GitHub
+    const githubPath = 'public/logo.png'
+    const message = `chore: 更新网站Logo - ${new Date().toLocaleString('zh-CN')}`
+
+    await uploadBinaryFile(githubPath, arrayBuffer, message)
+
+    // 更新当前Logo显示
+    currentLogo.value = logoPreview.value
+
+    // 清理选择的文件
+    selectedLogoFile.value = null
+    logoPreview.value = ''
+    logoFileInput.value.value = ''
+
+    showDialog(
+      'success',
+      '🎉 Logo上传成功',
+      '您的网站Logo已成功保存到GitHub仓库！',
+      [
+        '• 更改将在 2-3 分钟内自动部署到线上',
+        '• 部署完成后，刷新页面即可看到新Logo',
+        '• 如有问题，请检查Vercel或CFpage是否触发自动部署'
+      ]
+    )
+  } catch (error) {
+    console.error('上传Logo失败:', error)
+    showDialog(
+      'error',
+      '❌ 上传失败',
+      'Logo上传过程中发生错误，请重试',
+      [`• 错误详情: ${error.message}`]
+    )
+  } finally {
+    logoSaving.value = false
+  }
+}
+
 // 组件挂载时执行
 onMounted(() => {
   checkEnvConfig()
   getSystemInfo()
   testConnection()
+  loadWebsiteSettings()
 })
 </script>
 
@@ -521,6 +797,155 @@ onMounted(() => {
   white-space: nowrap;
 }
 
+/* 网站设置样式 */
+.website-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setting-group label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.setting-description {
+  color: #7f8c8d;
+  font-size: 13px;
+  margin: 5px 0 0 0;
+}
+
+/* 标题设置样式 */
+.title-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.title-input {
+  flex: 1;
+  padding: 10px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.title-input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.save-title-btn {
+  padding: 10px 20px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.save-title-btn:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.save-title-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Logo设置样式 */
+.logo-upload-area {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.logo-preview {
+  width: 128px;
+  height: 128px;
+  border: 2px dashed #e9ecef;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  overflow: hidden;
+}
+
+.logo-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.logo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #7f8c8d;
+  text-align: center;
+}
+
+.logo-placeholder span {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.logo-placeholder p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.logo-upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.select-logo-btn, .save-logo-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.select-logo-btn {
+  background: #95a5a6;
+  color: white;
+}
+
+.select-logo-btn:hover {
+  background: #7f8c8d;
+}
+
+.save-logo-btn {
+  background: #27ae60;
+  color: white;
+}
+
+.save-logo-btn:hover:not(:disabled) {
+  background: #219a52;
+}
+
+.save-logo-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .github-status {
@@ -547,6 +972,20 @@ onMounted(() => {
   .info-value {
     max-width: none;
     word-break: break-all;
+  }
+
+  .title-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .logo-upload-area {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .logo-upload-controls {
+    align-items: center;
   }
 }
 </style>

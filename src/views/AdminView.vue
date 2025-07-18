@@ -63,7 +63,7 @@
           <button
             class="tab-btn"
             :class="{ active: activeTab === 'sites' }"
-            @click="activeTab = 'sites'"
+            @click="switchToSiteTab"
           >
             🌐 站点管理
           </button>
@@ -82,6 +82,7 @@
             :categories="categories"
             @update="handleCategoriesUpdate"
             @save="saveToGitHub"
+            @viewSites="switchToSiteManager"
             :loading="saving"
           />
         </div>
@@ -90,6 +91,7 @@
         <div v-if="activeTab === 'sites'" class="tab-content">
           <SiteManager
             :categories="categories"
+            :initialSelectedCategoryId="selectedCategoryId"
             @update="handleCategoriesUpdate"
             @save="saveToGitHub"
             :loading="saving"
@@ -139,6 +141,7 @@ const saving = ref(false)
 const activeTab = ref('categories')
 const categories = ref([])
 const navTitle = ref('猫猫导航') // 保存网站标题
+const selectedCategoryId = ref('') // 用于站点管理的选中分类
 
 // 紧急兜底：如果5秒后loading还是true，强制重置
 setTimeout(() => {
@@ -273,6 +276,18 @@ const loadCategories = async () => {
 // 处理分类更新
 const handleCategoriesUpdate = (newCategories) => {
   categories.value = newCategories
+}
+
+// 切换到站点管理并选中对应分类
+const switchToSiteManager = (categoryId) => {
+  selectedCategoryId.value = categoryId
+  activeTab.value = 'sites'
+}
+
+// 手动切换到站点管理标签
+const switchToSiteTab = () => {
+  selectedCategoryId.value = '' // 清空选中分类，显示所有站点
+  activeTab.value = 'sites'
 }
 
 // 显示弹框

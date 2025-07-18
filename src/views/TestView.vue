@@ -41,10 +41,10 @@
 </template>
 
 <script setup>
-// import { ref } from 'vue'
+import { ref } from 'vue'
 // import { useGitHubAPI } from '@/apis/useGitHubAPI.js'
 
-// const envResult = ref('')
+const envResult = ref('')
 // const apiResult = ref(null)
 // const githubResult = ref('')
 // const apiTesting = ref(false)
@@ -65,7 +65,7 @@ const checkEnvVars = () => {
     }
   }
 
-  // envResult.value = JSON.stringify(result, null, 2)
+  envResult.value = JSON.stringify(result, null, 2)
   console.log('环境变量测试结果:', result)
 }
 

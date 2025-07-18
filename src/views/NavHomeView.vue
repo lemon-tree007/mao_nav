@@ -4,7 +4,7 @@
     <aside class="sidebar">
       <!-- Logo区域 -->
       <div class="logo-section">
-        <img src="@/assets/logo.png" alt="logo" class="logo" />
+        <img src="/logo.png" alt="logo" class="logo" />
         <h1 class="site-title">{{ title || '猫猫导航' }}</h1>
       </div>
 
@@ -36,7 +36,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
           </svg>
-          <span>开源项目,Star</span>
+          <span>开源不易，Star一下吧！⭐</span>
         </a>
       </div>
     </aside>
@@ -74,10 +74,13 @@
         <!-- 移动端分类菜单 -->
         <div class="mobile-menu" :class="{ active: showMobileMenu }">
           <div class="mobile-menu-header">
-            <h3>分类导航</h3>
+            <div class="header-left">
+              <h3>分类导航</h3>
+              <img :src="githubLogo" alt="GitHub" class="header-github-icon" @click="openGitHub" />
+            </div>
             <button class="close-btn" @click="closeMobileMenu">×</button>
           </div>
-          <ul class="mobile-category-list">
+                    <ul class="mobile-category-list">
             <li
               v-for="category in categories"
               :key="category.id"
@@ -176,20 +179,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useNavigation } from '@/apis/useNavigation.js'
 // 导入搜索引擎logo图片
 import googleLogo from '@/assets/goolge.png'
 import baiduLogo from '@/assets/baidu.png'
 import bingLogo from '@/assets/bing.png'
 import duckLogo from '@/assets/duck.png'
+// 导入GitHub logo
+import githubLogo from '@/assets/github.png'
 
 // 使用导航API
 const { categories, title, loading, error, fetchCategories } = useNavigation()
 
 // 响应式数据
 const searchQuery = ref('') // 搜索查询
-const selectedEngine = ref('google') // 选中的搜索引擎
+const selectedEngine = ref('bing') // 选中的搜索引擎
 const showMobileMenu = ref(false) // 移动端菜单显示状态
 
 // 搜索引擎配置
@@ -207,7 +212,7 @@ const searchEngines = {
   bing: {
     url: 'https://www.bing.com/search?q=',
     icon: bingLogo,
-    placeholder: 'Bing 搜索'
+    placeholder: 'Bing (点logo切换搜索引擎)'
   },
   duckduckgo: {
     url: 'https://duckduckgo.com/?q=',
@@ -288,10 +293,18 @@ const handleImageError = (event) => {
 // 移动端菜单控制
 const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value
+  // 控制body滚动
+  if (showMobileMenu.value) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
 }
 
 const closeMobileMenu = () => {
   showMobileMenu.value = false
+  // 恢复body滚动
+  document.body.style.overflow = ''
 }
 
 // 移动端分类滚动
@@ -304,9 +317,20 @@ const scrollToCategoryMobile = (categoryId) => {
   }, 200)
 }
 
+// 打开GitHub项目页面
+const openGitHub = () => {
+  window.open('https://github.com/maodeyu180/mao_nav', '_blank')
+}
+
 // 组件挂载时获取数据
 onMounted(() => {
   fetchCategories()
+})
+
+// 组件卸载时清理样式
+onUnmounted(() => {
+  // 确保卸载时恢复body滚动
+  document.body.style.overflow = ''
 })
 </script>
 
@@ -538,13 +562,16 @@ onMounted(() => {
   position: fixed;
   top: 0;
   right: -100%;
-  width: 280px;
+  width: 240px;
   height: 100vh;
   background: white;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   z-index: 1001;
   transition: right 0.3s ease;
   overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .mobile-menu.active {
@@ -559,12 +586,33 @@ onMounted(() => {
   border-bottom: 1px solid #e9ecef;
   background: #2c3e50;
   color: white;
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .mobile-menu-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
+}
+
+.header-github-icon {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  opacity: 0.8;
+}
+
+.header-github-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .close-btn {
@@ -591,6 +639,9 @@ onMounted(() => {
   list-style: none;
   padding: 0;
   margin: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 160px; /* 增加底部内边距确保最后一项完全可见 */
 }
 
 .mobile-category-item {
@@ -618,6 +669,8 @@ onMounted(() => {
   font-weight: 500;
   color: #2c3e50;
 }
+
+
 
 /* 移动端菜单遮罩 */
 .mobile-menu-overlay {
@@ -786,6 +839,9 @@ onMounted(() => {
   color: #7f8c8d;
   margin: 0;
   line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 页面底部 */
@@ -889,6 +945,7 @@ onMounted(() => {
   .nav-home {
     flex-direction: column;
     height: 100vh;
+    height: 100svh; /* 使用动态视口高度 */
     overflow: hidden;
   }
 
@@ -899,6 +956,7 @@ onMounted(() => {
   .main-content {
     flex: 1;
     height: 100vh;
+    height: 100svh; /* 使用动态视口高度，更准确 */
     margin-left: 0;
     display: flex;
     flex-direction: column;
@@ -920,7 +978,7 @@ onMounted(() => {
     flex: 1;
     padding: 20px 15px;
     padding-top: 100px; /* 为固定的搜索框留出空间 */
-    padding-bottom: 100px;
+    padding-bottom: 300px; /* 增加底部padding确保内容可以完全滚动 */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
   }
@@ -931,12 +989,27 @@ onMounted(() => {
   }
 
   .sites-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
 
   .site-card {
-    padding: 15px;
+    padding: 12px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .site-card .site-icon {
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+
+  .site-card .site-name {
+    font-size: 15px;
+  }
+
+  .site-card .site-description {
+    font-size: 12px;
   }
 
   .category-title {
