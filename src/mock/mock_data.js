@@ -533,18 +533,18 @@ export const mockData = {
           "icon": "https://www.coursera.org/favicon.ico"
         },
         {
-          "id": "site-1752635322544",
-          "name": "Z-Library",
-          "url": "https://zh.zlib2.ru/",
-          "description": "",
-          "icon": "https://zh.zlib2.ru/favicon.ico"
-        },
-        {
           "id": "site-1752635348068",
           "name": "安娜的档案",
           "url": "https://zh.annas-archive.org",
           "description": "",
           "icon": "https://zh.annas-archive.org/favicon.ico"
+        },
+        {
+          "id": "site-1752635322544",
+          "name": "Z-Library",
+          "url": "https://z-lib.hk",
+          "description": "",
+          "icon": "https://zh.zlib101.ru/favicon.ico?v=1"
         }
       ]
     },
@@ -692,6 +692,5 @@ export const mockData = {
       ]
     }
   ],
-  "title": "小黑导航",
-  "_fileSha": "285303bbf1cf7d243a5ad4a52b5bc481b2183969"
+  "title": "小黑导航"
 }
