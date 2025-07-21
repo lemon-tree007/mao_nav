@@ -47,6 +47,13 @@ export const mockData = {
           "url": "https://www.cloudflare.com",
           "description": "",
           "icon": "https://external-content.duckduckgo.com/ip3/www.cloudflare.com.ico"
+        },
+        {
+          "id": "site-1753084617974",
+          "name": "autistici",
+          "url": "https://www.autistici.org/",
+          "description": "隐私邮箱服务",
+          "icon": "https://www.autistici.org/static/favicon.ico"
         }
       ]
     },
