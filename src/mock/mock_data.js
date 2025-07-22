@@ -17,7 +17,7 @@ export const mockData = {
           "id": "site-1752647763198",
           "name": "NodeSeek",
           "url": "https://www.nodeseek.com/",
-          "description": "",
+          "description": "小鸡玩家集合",
           "icon": "https://external-content.duckduckgo.com/ip3/www.nodeseek.com.ico"
         },
         {
