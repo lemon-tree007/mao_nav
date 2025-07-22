@@ -5,11 +5,11 @@
       <div class="header-actions">
         <select v-model="selectedCategoryId" class="category-filter">
           <option value="">所有分类</option>
-          <option v-for="category in categories" :key="category.id" :value="category.id">
+          <option v-for="category in localCategories" :key="category.id" :value="category.id">
             {{ category.icon }} {{ category.name }}
           </option>
         </select>
-        <button @click="showAddModal = true" class="add-btn">
+        <button @click="openAddModal" class="add-btn">
           ➕ 添加站点
         </button>
         <button @click="handleSave" :disabled="loading" class="save-btn">
@@ -25,74 +25,87 @@
         <span class="stat-label">总站点数</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">{{ categories.length }}</span>
+        <span class="stat-number">{{ localCategories.length }}</span>
         <span class="stat-label">分类数</span>
       </div>
       <div class="stat-item">
         <span class="stat-number">{{ filteredSites.length }}</span>
         <span class="stat-label">当前显示</span>
       </div>
+      <div class="stat-info">
+        💡 提示：选择分类后可拖拽排序，拖到页面边缘会自动滚动
+      </div>
     </div>
 
     <!-- 站点列表 -->
     <div class="sites-list">
-      <div
-        v-for="site in paginatedSites"
-        :key="site.id"
-        class="site-item"
+      <draggable
+        v-model="currentPageSites"
+        v-bind="dragOptions"
+        @end="onDragEnd"
+        item-key="id"
+        tag="div"
+        class="draggable-list"
+        :class="{ 'pagination-disabled': !selectedCategoryId }"
       >
-        <div class="site-info">
-          <div class="site-icon">
-            <img :src="getIconDisplayUrl(site.icon)" :alt="site.name" @error="handleImageError">
+        <template #item="{ element: site }">
+          <div
+            class="site-item"
+            :class="{ 'draggable-item': selectedCategoryId }"
+          >
+            <div class="drag-handle" v-if="selectedCategoryId" title="拖拽排序">
+              ⋮⋮
+            </div>
+            <div class="site-info">
+              <div class="site-icon">
+                <img :src="getIconDisplayUrl(site.icon)" :alt="site.name" @error="handleImageError">
+              </div>
+              <div class="site-details">
+                <h3>{{ site.name }}</h3>
+                <p class="site-description">{{ site.description }}</p>
+                <a :href="site.url" target="_blank" rel="noopener noreferrer" class="site-url">
+                  {{ site.url }}
+                </a>
+                <span class="site-category">
+                  {{ getCategoryName(site.categoryId) }}
+                </span>
+              </div>
+            </div>
+            <div class="site-actions">
+              <button @click="editSite(site)" class="edit-btn">
+                ✏️ 编辑
+              </button>
+              <button @click="deleteSite(site)" class="delete-btn">
+                🗑️ 删除
+              </button>
+            </div>
           </div>
-          <div class="site-details">
-            <h3>{{ site.name }}</h3>
-            <p class="site-description">{{ site.description }}</p>
-            <a :href="site.url" target="_blank" rel="noopener noreferrer" class="site-url">
-              {{ site.url }}
-            </a>
-            <span class="site-category">
-              {{ getCategoryName(site.categoryId) }}
-            </span>
-          </div>
-        </div>
-        <div class="site-actions">
-          <button @click="editSite(site)" class="edit-btn">
-            ✏️ 编辑
-          </button>
-          <button @click="deleteSite(site)" class="delete-btn">
-            🗑️ 删除
-          </button>
-        </div>
+        </template>
+      </draggable>
+
+      <!-- 提示 -->
+      <div v-if="!selectedCategoryId" class="pagination-notice">
+        💡 请选择具体分类以启用拖拽排序功能
+      </div>
+
+      <!-- 拖拽帮助 -->
+      <div v-if="selectedCategoryId && filteredSites.length > 5" class="drag-help">
+        🖱️ 拖拽到页面顶部或底部边缘可自动滚动
       </div>
     </div>
 
-    <!-- 分页 -->
-    <div class="pagination" v-if="totalPages > 1">
-      <button
-        @click="currentPage--"
-        :disabled="currentPage === 1"
-        class="page-btn"
-      >
-        ⬅️ 上一页
-      </button>
-      <span class="page-info">
-        第 {{ currentPage }} 页，共 {{ totalPages }} 页
-      </span>
-      <button
-        @click="currentPage++"
-        :disabled="currentPage === totalPages"
-        class="page-btn"
-      >
-        下一页 ➡️
-      </button>
-    </div>
+
 
     <!-- 添加/编辑站点弹窗 -->
     <div v-if="showAddModal || editingSite" class="modal-overlay">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>{{ editingSite ? '编辑站点' : '添加站点' }}</h3>
+          <h3>
+            {{ editingSite ? '编辑站点' : '添加站点' }}
+            <span v-if="!editingSite && formData.categoryId" class="category-hint">
+              → {{ getCategoryName(formData.categoryId) }}
+            </span>
+          </h3>
           <button @click="closeModal" class="close-btn">✕</button>
         </div>
 
@@ -111,8 +124,9 @@
               <label>所属分类 *:</label>
               <select v-model="formData.categoryId" required class="form-input">
                 <option value="">请选择分类</option>
-                <option v-for="category in categories" :key="category.id" :value="category.id">
+                <option v-for="category in localCategories" :key="category.id" :value="category.id">
                   {{ category.icon }} {{ category.name }}
+                  <span v-if="category.id === selectedCategoryId">(当前筛选)</span>
                 </option>
               </select>
             </div>
@@ -171,6 +185,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useGitHubAPI } from '../../apis/useGitHubAPI.js'
+import draggable from 'vuedraggable'
 
 const props = defineProps({
   categories: {
@@ -201,10 +216,8 @@ const pendingIcons = ref(new Map())
 // 图标预览缓存 - 用于在编辑期间显示图标
 const iconPreviews = ref(new Map())
 
-// 分页和筛选
+// 筛选
 const selectedCategoryId = ref('')
-const currentPage = ref(1)
-const pageSize = 10
 
 // 弹窗状态
 const showAddModal = ref(false)
@@ -229,7 +242,6 @@ watch(() => props.categories, (newCategories) => {
 watch(() => props.initialSelectedCategoryId, (newCategoryId) => {
   if (newCategoryId) {
     selectedCategoryId.value = newCategoryId
-    currentPage.value = 1 // 重置到第一页
   }
 }, { immediate: true })
 
@@ -263,12 +275,31 @@ const filteredSites = computed(() => {
   return allSites.value.filter(site => site.categoryId === selectedCategoryId.value)
 })
 
-const totalPages = computed(() => Math.ceil(filteredSites.value.length / pageSize))
+// 当前显示的站点（用于拖拽排序）
+const currentPageSites = computed({
+  get() {
+    return filteredSites.value
+  },
+  set(newSites) {
+    // 拖拽排序后更新站点顺序
+    updateSitesOrder(newSites)
+  }
+})
 
-const paginatedSites = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  const end = start + pageSize
-  return filteredSites.value.slice(start, end)
+// 拖拽配置
+const dragOptions = computed(() => {
+  return {
+    animation: 200,
+    group: "sites",
+    disabled: !selectedCategoryId.value, // 只有选择了具体分类才能拖拽
+    ghostClass: "sortable-ghost",
+    // 启用拖拽时自动滚动
+    scroll: true,
+    forceAutoScrollFallback: true, // 强制启用滚动回退
+    scrollSensitivity: 100, // 距离边缘100px时开始滚动
+    scrollSpeed: 15, // 滚动速度
+    bubbleScroll: true // 支持嵌套滚动
+  }
 })
 
 // 获取分类名称
@@ -293,6 +324,7 @@ const getIconDisplayUrl = (iconPath) => {
 // 编辑站点
 const editSite = (site) => {
   editingSite.value = site
+  showAddModal.value = false // 确保添加弹窗关闭
   formData.value = {
     name: site.name,
     url: site.url,
@@ -314,6 +346,37 @@ const deleteSite = (site) => {
   }
 }
 
+// 拖拽排序：更新站点顺序
+const updateSitesOrder = (newSites) => {
+  if (!selectedCategoryId.value) {
+    // 如果是显示所有分类，拖拽排序会比较复杂，暂时不支持
+    console.warn('暂不支持跨分类拖拽排序')
+    return
+  }
+
+  // 找到当前分类
+  const category = localCategories.value.find(cat => cat.id === selectedCategoryId.value)
+  if (!category) return
+
+  // 更新该分类的站点顺序
+  category.sites = newSites.map(site => ({
+    id: site.id,
+    name: site.name,
+    url: site.url,
+    description: site.description,
+    icon: site.icon
+  }))
+
+  syncToParent()
+}
+
+// 拖拽结束事件
+const onDragEnd = (event) => {
+  console.log('拖拽排序完成:', event)
+}
+
+
+
 // 通用图标测试函数
 const testImage = async (imageUrl) => {
   console.log(`🔍 开始检测图标: ${imageUrl}`)
@@ -334,9 +397,9 @@ const testImage = async (imageUrl) => {
         throw new Error(`HTTP ${response.status}: 无法访问图标`)
       }
 
-      // 检查Content-Length，如果小于512bytes认为可能是空文件或无效图标
+      // 检查Content-Length，如果过小认为可能是空文件或无效图标
       const contentLength = response.headers.get('content-length')
-      if (contentLength && parseInt(contentLength) < 512) {
+      if (contentLength && parseInt(contentLength) < 100) {
         throw new Error(`文件过小 (${contentLength} bytes)，可能是空的或无效图标`)
       }
 
@@ -348,7 +411,7 @@ const testImage = async (imageUrl) => {
         }
 
         const arrayBuffer = await fullResponse.arrayBuffer()
-        if (arrayBuffer.byteLength < 512) {
+        if (arrayBuffer.byteLength < 100) {
           throw new Error(`下载文件过小 (${arrayBuffer.byteLength} bytes)，可能是空的或无效图标`)
         }
       }
@@ -375,9 +438,9 @@ const testImage = async (imageUrl) => {
     const img = new Image()
     img.onload = () => {
       // 检查图片尺寸，过小可能是错误页面或无效图标
-      if (img.naturalWidth < 8 || img.naturalHeight < 8) {
-        console.log(`❌ 图片尺寸过小: ${img.naturalWidth}x${img.naturalHeight}`)
-        reject(new Error(`图片尺寸过小 (${img.naturalWidth}x${img.naturalHeight})，可能是无效图标`))
+      if (img.naturalWidth < 1 || img.naturalHeight < 1) {
+        console.log(`❌ 图片尺寸无效: ${img.naturalWidth}x${img.naturalHeight}`)
+        reject(new Error(`图片尺寸无效 (${img.naturalWidth}x${img.naturalHeight})，可能是无效图标`))
         return
       }
       console.log(`✅ 跨域图标检测成功，尺寸: ${img.naturalWidth}x${img.naturalHeight}`)
@@ -392,27 +455,30 @@ const testImage = async (imageUrl) => {
   })
 }
 
+
+
 // 下载图标并缓存
 const downloadAndCacheIcon = async (iconUrl, domain) => {
-  try {
-    console.log(`📥 开始下载图标: ${iconUrl}`)
+  console.log(`📥 开始下载图标: ${iconUrl}`)
 
-    // 使用fetch下载图标
+  // 优先尝试fetch直接下载
+  try {
     const response = await fetch(iconUrl, {
       mode: 'cors',
-      credentials: 'omit'
+      credentials: 'omit',
+      headers: {
+        'Accept': 'image/*,*/*;q=0.8'
+      }
     })
 
     if (!response.ok) {
-      throw new Error(`下载失败: HTTP ${response.status}`)
+      throw new Error(`HTTP ${response.status}`)
     }
 
-    // 获取图标数据
     const arrayBuffer = await response.arrayBuffer()
 
-    // 检查文件大小
-    if (arrayBuffer.byteLength < 512) {
-      throw new Error('图标文件过小，可能是无效文件')
+    if (arrayBuffer.byteLength < 100) {
+      throw new Error(`图标文件过小 (${arrayBuffer.byteLength} bytes)`)
     }
 
     // 创建本地文件路径和文件名
@@ -432,18 +498,24 @@ const downloadAndCacheIcon = async (iconUrl, domain) => {
     })
 
     // 缓存预览URL，用于编辑期间显示
-    // 如果之前有同域名的预览，先清理掉
     const oldPreview = iconPreviews.value.get(localPath)
     if (oldPreview) {
       URL.revokeObjectURL(oldPreview)
     }
     iconPreviews.value.set(localPath, dataUrl)
 
-    console.log(`✅ 图标下载并缓存成功: ${localPath}`)
+    console.log(`✅ Fetch下载成功: ${localPath}，文件大小: ${arrayBuffer.byteLength} bytes`)
     return localPath
-  } catch (error) {
-    console.log(`❌ 下载图标失败: ${error.message}`)
-    throw error
+  } catch (fetchError) {
+    console.warn(`⚠️ Fetch下载失败: ${fetchError.message}，尝试Canvas方法`)
+
+    // 如果fetch失败，使用Canvas方法
+    // try {
+    //   return await downloadIconViaCanvas(iconUrl, domain)
+    // } catch (canvasError) {
+    //   console.error(`❌ Canvas下载也失败: ${canvasError.message}`)
+    //   throw new Error(`所有下载方法都失败: Fetch(${fetchError.message}), Canvas(${canvasError.message})`)
+    // }
   }
 }
 
@@ -500,41 +572,65 @@ const uploadPendingIconsToGitHub = async () => {
 // 获取favicon图标
 const tryFallbackServices = async (domain) => {
   // 首先尝试icon服务
-  const iconServiceUrl = `https://icon.maodeyu.fun/favicon/${domain}`
+  // 支持多个favicon服务轮询尝试
+  const iconServiceUrls = [
+    // `https://www.faviconextractor.com/favicon/${domain}`,
+    `https://icon.maodeyu.fun/favicon/${domain}`
+  ]
 
-  try {
-    console.log(`🔍 尝试图标服务:`, iconServiceUrl)
+  for (const iconServiceUrl of iconServiceUrls) {
+    try {
+      console.log(`🔍 尝试图标服务:`, iconServiceUrl)
 
-    // 先测试图标是否可用
-    await testImage(iconServiceUrl)
+      // 先测试图标是否可用
+      // await testImage(iconServiceUrl)
+      // console.log(`✅ 图标测试通过: ${iconServiceUrl}`)
 
-    // 下载并缓存到内存
-    const localPath = await downloadAndCacheIcon(iconServiceUrl, domain)
-
-    formData.value.icon = localPath
-    iconError.value = false
-    console.log(`✅ 成功获取并保存图标`)
-    return
-  } catch (error) {
-    console.log(`❌ 图标服务失败:`, error.message)
+      // 下载并缓存到内存（包含降级策略）
+      try {
+        const localPath = await downloadAndCacheIcon(iconServiceUrl, domain)
+        formData.value.icon = localPath
+        iconError.value = false
+        console.log(`✅ 成功下载并缓存图标: ${iconServiceUrl}`)
+        return
+      } catch (error) {
+        console.log(`❌ 图标服务失败:`, iconServiceUrl, error.message)
+      }
+    } catch (error) {
+      console.log(`❌ 图标服务失败:`, iconServiceUrl, error.message)
+      // 继续尝试下一个服务
+    }
   }
 
+  const fallbackUrl = `https://www.faviconextractor.com/favicon/${domain}`
+
   // 回退到标准favicon.ico路径
-  const fallbackUrl = `https://${domain}/favicon.ico`
+  // const fallbackUrl = `https://${domain}/favicon.ico`
 
   try {
     console.log(`🔍 尝试标准路径:`, fallbackUrl)
 
     // 先测试图标是否可用
     await testImage(fallbackUrl)
-
-    // 下载并缓存到内存
-    const localPath = await downloadAndCacheIcon(fallbackUrl, domain)
-
-    formData.value.icon = localPath
+    formData.value.icon = fallbackUrl
     iconError.value = false
-    console.log(`✅ 使用标准favicon.ico路径成功`)
+    console.log(`✅ 直接使用标准favicon.ico URL`)
     return
+    // // 下载并缓存到内存（包含降级策略）
+    // try {
+    //   const localPath = await downloadAndCacheIcon(fallbackUrl, domain)
+    //   formData.value.icon = localPath
+    //   iconError.value = false
+    //   console.log(`✅ 标准路径下载并缓存成功`)
+    //   return
+    // } catch (downloadError) {
+    //   console.warn(`⚠️ 标准路径所有下载方法都失败，但图标可用，直接使用URL: ${downloadError.message}`)
+    //   // 如果所有下载方法都失败但测试通过，直接使用URL
+    //   formData.value.icon = fallbackUrl
+    //   iconError.value = false
+    //   console.log(`✅ 直接使用标准favicon.ico URL`)
+    //   return
+    // }
   } catch (error) {
     console.log(`❌ 标准路径也失败:`, error.message)
     console.error('❌ 无法获取网站图标')
@@ -606,6 +702,21 @@ const saveSite = () => {
   closeModal()
 }
 
+// 打开添加站点弹窗
+const openAddModal = () => {
+  showAddModal.value = true
+  // 设置默认分类为当前选中的分类，如果没有选中则使用第一个分类
+  const defaultCategoryId = selectedCategoryId.value || (localCategories.value[0]?.id || '')
+  formData.value = {
+    name: '',
+    url: '',
+    description: '',
+    icon: '',
+    categoryId: defaultCategoryId
+  }
+  iconError.value = false
+}
+
 // 关闭弹窗
 const closeModal = () => {
   showAddModal.value = false
@@ -615,7 +726,7 @@ const closeModal = () => {
     url: '',
     description: '',
     icon: '',
-    categoryId: selectedCategoryId.value || (localCategories.value[0]?.id || '')
+    categoryId: ''
   }
   iconError.value = false
 }
@@ -628,30 +739,26 @@ const handleImageError = (event) => {
 // 处理保存操作
 const handleSave = async () => {
   try {
-    // 先上传待处理的图标文件
+    // 先上传待处理的图标文件（只有真正下载缓存的图标）
     if (pendingIcons.value.size > 0) {
+      console.log(`📤 开始上传 ${pendingIcons.value.size} 个缓存的图标...`)
       await uploadPendingIconsToGitHub()
+      console.log(`✅ 所有图标上传完成`)
+    } else {
+      console.log(`ℹ️ 没有需要上传的图标（可能都使用了外部URL）`)
     }
 
     // 然后保存站点数据
     emit('save')
-
-    // // 保存成功后清理预览缓存，释放内存
-    // iconPreviews.value.forEach((url) => {
-    //   URL.revokeObjectURL(url)
-    // })
-    // iconPreviews.value.clear()
-
-    // console.log('✅ 预览缓存已清理')
   } catch (error) {
     console.error('保存失败:', error)
     alert(`保存失败: ${error.message}`)
   }
 }
 
-// 重置分页
+// 监听分类变化
 watch(selectedCategoryId, () => {
-  currentPage.value = 1
+  console.log('分类切换:', selectedCategoryId.value)
 })
 </script>
 
@@ -723,9 +830,11 @@ watch(selectedCategoryId, () => {
 }
 
 .stats-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 2fr;
   gap: 20px;
   margin-bottom: 30px;
+  align-items: center;
 }
 
 .stat-item {
@@ -750,11 +859,63 @@ watch(selectedCategoryId, () => {
   margin-top: 5px;
 }
 
+.stat-info {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  background: linear-gradient(135deg, #e8f5e8, #f0f8ff);
+  border-radius: 8px;
+  border-left: 4px solid #27ae60;
+  color: #2c3e50;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
 .sites-list {
+  margin-bottom: 30px;
+}
+
+.draggable-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  margin-bottom: 30px;
+}
+
+
+
+.pagination-notice {
+  text-align: center;
+  padding: 20px;
+  background: #e8f5e8;
+  border: 1px solid #4caf50;
+  border-radius: 8px;
+  color: #2e7d32;
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.drag-help {
+  text-align: center;
+  padding: 12px 20px;
+  background: #e3f2fd;
+  border: 1px solid #2196f3;
+  border-radius: 6px;
+  color: #1565c0;
+  font-size: 13px;
+  margin-top: 15px;
+  opacity: 0.9;
+}
+
+.pagination-disabled .site-item {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.pagination-disabled .site-item:hover {
+  transform: none;
+  background: #f8f9fa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .site-item {
@@ -765,11 +926,64 @@ watch(selectedCategoryId, () => {
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e9ecef;
-  transition: box-shadow 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .site-item:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.draggable-item {
+  cursor: move;
+  position: relative;
+}
+
+.draggable-item:hover {
+  background: #f1f3f4;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.draggable-item.sortable-chosen {
+  background: #e3f2fd;
+  border-color: #2196f3;
+  transform: rotate(3deg);
+  box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
+}
+
+.draggable-item.sortable-ghost {
+  opacity: 0.5;
+  background: #e8f5e8;
+  border: 2px dashed #4caf50;
+}
+
+.drag-handle {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #95a5a6;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: grab;
+  padding: 8px 4px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.drag-handle:hover {
+  color: #3498db;
+  background: rgba(52, 152, 219, 0.1);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  color: #2980b9;
+}
+
+.draggable-item .site-info {
+  margin-left: 30px;
 }
 
 .site-info {
@@ -788,6 +1002,7 @@ watch(selectedCategoryId, () => {
   align-items: center;
   justify-content: center;
   border: 1px solid #e9ecef;
+  flex-shrink: 0;
 }
 
 .site-icon img {
@@ -866,37 +1081,7 @@ watch(selectedCategoryId, () => {
   background: #c0392b;
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  padding: 20px 0;
-}
 
-.page-btn {
-  padding: 8px 16px;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.page-btn:hover:not(:disabled) {
-  background: #2980b9;
-}
-
-.page-btn:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-}
-
-.page-info {
-  color: #7f8c8d;
-  font-size: 14px;
-}
 
 /* 弹窗样式 */
 .modal-overlay {
@@ -932,6 +1117,19 @@ watch(selectedCategoryId, () => {
 .modal-header h3 {
   margin: 0;
   color: #2c3e50;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-hint {
+  font-size: 14px;
+  color: #3498db;
+  background: #e8f4fd;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 400;
 }
 
 .close-btn {
@@ -1079,6 +1277,13 @@ watch(selectedCategoryId, () => {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   }
 
+  .stat-info {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+    font-size: 12px;
+    padding: 10px;
+  }
+
   .site-item {
     flex-direction: column;
     align-items: flex-start;
@@ -1087,6 +1292,8 @@ watch(selectedCategoryId, () => {
 
   .site-actions {
     align-self: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .form-row {
@@ -1095,6 +1302,39 @@ watch(selectedCategoryId, () => {
 
   .icon-input-group {
     flex-direction: column;
+  }
+
+  .modal-header h3 {
+    font-size: 18px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .category-hint {
+    font-size: 12px;
+    padding: 2px 6px;
+  }
+
+  .draggable-item .site-info {
+    margin-left: 20px;
+  }
+
+  .drag-handle {
+    left: 4px;
+    font-size: 14px;
+    padding: 6px 2px;
+  }
+
+  .pagination-notice {
+    padding: 15px;
+    font-size: 13px;
+  }
+
+  .drag-help {
+    padding: 10px 15px;
+    font-size: 12px;
+    margin-top: 10px;
   }
 }
 </style>
