@@ -549,9 +549,9 @@ export const mockData = {
         {
           "id": "site-1752635322544",
           "name": "Z-Library",
-          "url": "https://z-lib.hk",
+          "url": "https://zh.su7go.site/",
           "description": "",
-          "icon": "https://zh.zlib101.ru/favicon.ico?v=1"
+          "icon": "https://zh.su7go.site/favicon.ico"
         }
       ]
     },
