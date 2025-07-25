@@ -267,6 +267,13 @@ export const mockData = {
           "url": "https://cloud.tencent.com",
           "description": "腾讯云计算服务",
           "icon": "/sitelogo/cloud.tencent.com.ico"
+        },
+        {
+          "id": "site-1753406406565",
+          "name": "netcup",
+          "url": "https://www.customercontrolpanel.de/",
+          "description": "netcup ccp",
+          "icon": "https://www.customercontrolpanel.de/images/favicon.png"
         }
       ]
     },
