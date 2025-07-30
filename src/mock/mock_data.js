@@ -586,7 +586,7 @@ export const mockData = {
           "id": "site-1752635216611",
           "name": "ITDOG",
           "url": "https://www.itdog.cn",
-          "description": "",
+          "description": "测速工具",
           "icon": "https://www.itdog.cn/favicon.ico"
         },
         {
