@@ -1,5 +1,33 @@
 <template>
-  <div class="nav-home">
+  <!-- 锁定界面 -->
+  <div v-if="isLocked && !isUnlocked" class="lock-container">
+    <div class="lock-box">
+      <h1>🔐 访问验证</h1>
+      <p class="lock-description">此导航站已启用访问保护</p>
+      <form @submit.prevent="handleUnlock">
+        <div class="form-group">
+          <label for="unlock-password">请输入访问密钥:</label>
+          <input
+            id="unlock-password"
+            type="password"
+            v-model="unlockPassword"
+            placeholder="请输入访问密钥"
+            required
+            class="form-input"
+          />
+        </div>
+        <button type="submit" class="unlock-btn" :disabled="unlocking">
+          {{ unlocking ? '验证中...' : '进入导航' }}
+        </button>
+      </form>
+      <div v-if="unlockError" class="error-message">
+        {{ unlockError }}
+      </div>
+    </div>
+  </div>
+
+  <!-- 正常导航界面 -->
+  <div v-else class="nav-home">
     <!-- 左侧边栏 -->
     <aside class="sidebar">
       <!-- Logo区域 -->
@@ -197,6 +225,13 @@ const searchQuery = ref('') // 搜索查询
 const selectedEngine = ref('bing') // 选中的搜索引擎
 const showMobileMenu = ref(false) // 移动端菜单显示状态
 
+// 锁定功能相关
+const isLocked = ref(false) // 是否启用锁定功能
+const isUnlocked = ref(false) // 是否已解锁
+const unlockPassword = ref('') // 解锁密码输入
+const unlocking = ref(false) // 解锁中状态
+const unlockError = ref('') // 解锁错误信息
+
 // 搜索引擎配置
 const searchEngines = {
   google: {
@@ -276,6 +311,49 @@ const scrollToCategory = (categoryId) => {
   }
 }
 
+// 检查是否启用锁定功能
+const checkLockStatus = () => {
+  const openLock = import.meta.env.VITE_OPEN_LOCK
+  if (openLock && openLock.trim() !== '') {
+    isLocked.value = true
+    // 检查是否已经解锁过
+    const savedUnlock = localStorage.getItem('nav_unlocked')
+    if (savedUnlock === 'true') {
+      isUnlocked.value = true
+    }
+  } else {
+    isLocked.value = false
+    isUnlocked.value = true // 如果没有启用锁定，默认为解锁状态
+  }
+}
+
+// 处理解锁
+const handleUnlock = async () => {
+  unlocking.value = true
+  unlockError.value = ''
+
+    try {
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
+
+    if (!adminPassword) {
+      throw new Error('访问密钥未配置')
+    }
+
+    if (unlockPassword.value === adminPassword) {
+      isUnlocked.value = true
+      localStorage.setItem('nav_unlocked', 'true')
+      unlockPassword.value = ''
+      console.log('导航站解锁成功')
+    } else {
+      throw new Error('访问密钥错误，请重新输入')
+    }
+  } catch (error) {
+    unlockError.value = error.message
+  } finally {
+    unlocking.value = false
+  }
+}
+
 // 处理搜索
 const handleSearch = () => {
   if (!searchQuery.value.trim()) return
@@ -324,6 +402,7 @@ const openGitHub = () => {
 
 // 组件挂载时获取数据
 onMounted(() => {
+  checkLockStatus() // 检查锁定状态
   fetchCategories()
 })
 
@@ -335,6 +414,108 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* 锁定界面样式 */
+.lock-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2c3e50;
+  padding: 20px;
+  z-index: 9999;
+}
+
+.lock-box {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.lock-box h1 {
+  color: #2d3748;
+  margin-bottom: 8px;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.lock-description {
+  color: #718096;
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+.lock-box .form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.lock-box .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #4a5568;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.lock-box .form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
+.lock-box .form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.unlock-btn {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.unlock-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.unlock-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.lock-box .error-message {
+  margin-top: 15px;
+  padding: 12px;
+  background: #fed7d7;
+  color: #c53030;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid #feb2b2;
+}
+
 .nav-home {
   display: flex;
   min-height: 100vh;
