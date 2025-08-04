@@ -196,6 +196,13 @@ export const mockData = {
           "url": "https://www.customercontrolpanel.de/",
           "description": "netcup ccp",
           "icon": "https://www.customercontrolpanel.de/images/favicon.png"
+        },
+        {
+          "id": "site-1754290106384",
+          "name": "DigitalPlat FreeDomain Dashboard",
+          "url": "https://dash.domain.digitalplat.org",
+          "description": "",
+          "icon": "https://dash.domain.digitalplat.org/static/img/logo.jpg"
         }
       ]
     },
