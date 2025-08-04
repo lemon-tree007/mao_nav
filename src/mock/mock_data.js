@@ -199,7 +199,7 @@ export const mockData = {
         },
         {
           "id": "site-1754290106384",
-          "name": "DigitalPlat FreeDomain Dashboard",
+          "name": "FreeDomain",
           "url": "https://dash.domain.digitalplat.org",
           "description": "",
           "icon": "https://dash.domain.digitalplat.org/static/img/logo.jpg"
