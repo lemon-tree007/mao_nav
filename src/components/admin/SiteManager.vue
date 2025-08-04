@@ -668,16 +668,10 @@ const saveSite = () => {
 
   if (editingSite.value) {
     // 更新现有站点
-    // 首先从原分类中移除站点
     const originalCategory = localCategories.value.find(cat =>
       cat.sites && cat.sites.some(s => s.id === editingSite.value.id)
     )
 
-    if (originalCategory && originalCategory.sites) {
-      originalCategory.sites = originalCategory.sites.filter(s => s.id !== editingSite.value.id)
-    }
-
-    // 然后在新分类中添加更新后的站点
     const updatedSite = {
       id: editingSite.value.id,
       name: formData.value.name,
@@ -685,7 +679,21 @@ const saveSite = () => {
       description: formData.value.description,
       icon: formData.value.icon
     }
-    category.sites.push(updatedSite)
+
+    // 检查是否更改了分类
+    if (originalCategory && originalCategory.id === formData.value.categoryId) {
+      // 没有更改分类，在原位置更新，保持顺序
+      const siteIndex = originalCategory.sites.findIndex(s => s.id === editingSite.value.id)
+      if (siteIndex !== -1) {
+        originalCategory.sites[siteIndex] = updatedSite
+      }
+    } else {
+      // 更改了分类，从原分类移除并添加到新分类
+      if (originalCategory && originalCategory.sites) {
+        originalCategory.sites = originalCategory.sites.filter(s => s.id !== editingSite.value.id)
+      }
+      category.sites.push(updatedSite)
+    }
   } else {
     // 添加新站点
     const newSite = {
@@ -733,7 +741,9 @@ const closeModal = () => {
 
 // 处理图片错误
 const handleImageError = (event) => {
-  event.target.style.display = 'none'
+  // 设置默认的 favicon.ico 作为 fallback 图片
+  event.target.src = '/favicon.ico'
+  event.target.onerror = null // 防止无限循环
 }
 
 // 处理保存操作

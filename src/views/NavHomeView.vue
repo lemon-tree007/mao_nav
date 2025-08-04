@@ -365,7 +365,9 @@ const handleSearch = () => {
 
 // 处理图片加载错误
 const handleImageError = (event) => {
-  event.target.style.display = 'none'
+  // 设置默认的 favicon.ico 作为 fallback 图片
+  event.target.src = '/favicon.ico'
+  event.target.onerror = null // 防止无限循环
 }
 
 // 移动端菜单控制
