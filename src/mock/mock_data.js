@@ -7,20 +7,6 @@ export const mockData = {
       "order": 0,
       "sites": [
         {
-          "id": "v2ex",
-          "name": "V2EX",
-          "url": "https://www.v2ex.com",
-          "description": "创意工作者社区",
-          "icon": "/sitelogo/www.v2ex.com.ico"
-        },
-        {
-          "id": "linux-do",
-          "name": "Linux.do",
-          "url": "https://linux.do",
-          "description": "Linux技术社区，Peace and Love",
-          "icon": "/sitelogo/linux.do.ico"
-        },
-        {
           "id": "site-1783912254023",
           "name": "Autistici",
           "url": "https://accounts.autistici.org/",
@@ -63,6 +49,13 @@ export const mockData = {
       "icon": "👥",
       "order": 1,
       "sites": [
+        {
+          "id": "v2ex",
+          "name": "V2EX",
+          "url": "https://www.v2ex.com",
+          "description": "创意工作者社区",
+          "icon": "/sitelogo/www.v2ex.com.ico"
+        },
         {
           "id": "linuxdo",
           "name": "Linux.do",
