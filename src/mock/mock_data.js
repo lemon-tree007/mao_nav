@@ -143,6 +143,27 @@ export const mockData = {
       "order": 3,
       "sites": [
         {
+          "id": "site-1783911680986",
+          "name": "豆包",
+          "url": "https://www.doubao.com/",
+          "description": "豆包",
+          "icon": "https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/doubao/web/doubao_avatar_new.png"
+        },
+        {
+          "id": "site-1783911708676",
+          "name": "通义千问",
+          "url": "https://www.qianwen.com/",
+          "description": "通义千问",
+          "icon": "https://img.alicdn.com/imgextra/i2/O1CN01taBbMS1CfyJoOt0lB_!!6000000000109-2-tps-80-80.png"
+        },
+        {
+          "id": "site-1783911866562",
+          "name": "KIMI",
+          "url": "https://www.kimi.com/",
+          "description": "KIMI",
+          "icon": "https://www.faviconextractor.com/favicon/www.kimi.com"
+        },
+        {
           "id": "chatgpt",
           "name": "ChatGPT",
           "url": "https://chat.openai.com",
